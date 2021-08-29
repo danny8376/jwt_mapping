@@ -1,0 +1,15 @@
+name: jwt_mapping
+version: 0.1.0
+
+authors:
+  - DannyAAM <danny@saru.moe>
+
+dependencies:
+  jwt:
+    #github: crystal-community/jwt
+    github: danny8376/jwt
+    branch: dynamic_key
+
+crystal: 0.36.1
+
+license: MIT
