@@ -6,9 +6,7 @@ authors:
 
 dependencies:
   jwt:
-    #github: crystal-community/jwt
-    github: danny8376/jwt
-    branch: dynamic_key
+    github: crystal-community/jwt
 
 crystal: 0.36.1
 
