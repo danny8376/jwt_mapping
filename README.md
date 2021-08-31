@@ -25,11 +25,13 @@ class Data
   # Defines following properties :
   # exp : Time
   # nbf : Time
-  # iss : String
-  # aud : String | Array
-  # jti : String
   # iat : Time
+  # aud : String | Array
+  # iss : String
   # sub : String
+  # jti : String
+  # With human readable aliases :
+  # expiration, not_before, issued_at, audience, issuer, subject, jwt_id
   # See https://github.com/crystal-community/jwt#supported-reserved-claim-names
   include JWT::Token
 

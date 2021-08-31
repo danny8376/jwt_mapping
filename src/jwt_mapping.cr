@@ -39,17 +39,63 @@ module JWT
     macro included
       include JSON::Serializable
 
-      @[JSON::Field(converter: Time::EpochConverter)]
-      property exp : Time?
-      @[JSON::Field(converter: Time::EpochConverter)]
-      property nbf : Time?
-      property iss : String?
-      @[JSON::Field(converter: JWT::AudConverter)]
-      property aud : Array(String) | String | Nil
-      property jti : String?
-      @[JSON::Field(converter: Time::EpochConverter)]
-      property iat : Time?
-      property sub : String?
+      {%
+        props = [
+          {
+            name: "exp",
+            longname: "expiration",
+            type: Time?,
+            converter: Time::EpochConverter
+          },
+          {
+            name: "nbf",
+            longname: "not_before",
+            type: Time?,
+            converter: Time::EpochConverter
+          },
+          {
+            name: "iat",
+            longname: "issued_at",
+            type: Time?,
+            converter: Time::EpochConverter
+          },
+          {
+            name: "aud",
+            longname: "audience",
+            type: "String | Array(String) | Nil",
+          },
+          {
+            name: "iss",
+            longname: "issuer",
+            type: String?,
+          },
+          {
+            name: "sub",
+            longname: "subject",
+            type: String?,
+          },
+          {
+            name: "jti",
+            longname: "jwt_id",
+            type: String?,
+          }
+        ]
+      %}
+
+      {% for prop in props %}
+        {% if converter = prop[:converter] %}
+          @[JSON::Field(converter: {{converter}})]
+        {% end %}
+        property {{prop[:name].id}} : {{prop[:type].id}}
+
+        def {{prop[:longname].id}}
+          @{{prop[:name].id}}
+        end
+
+        def {{prop[:longname].id}}=(value)
+          @{{prop[:name].id}} = value
+        end
+      {% end %}
 
       # dummy for support of JSON::Serializable::Unmapped
 			@[JSON::Field(ignore: true)]
@@ -71,24 +117,22 @@ module JWT
 
       # dirty hack for compatibility with existing validation by emulating JSON::Any
 
-      {% time_vars = ["exp", "nbf", "iat"] %}
-      {% str_vars = ["iss", "jti", "sub"] %}
 
       def [](key)
         case key
-        when "aud"
-          if aud.is_a? Array
-            JSON::Any.new aud.as(Array).map { |v| JSON::Any.new v }
-          else
-            JSON::Any.new aud.as(String)
-          end
-        {% for var in time_vars %}
-          when "{{var.id}}"
-            JSON::Any.new {{var.id}}.not_nil!.to_unix
-        {% end %}
-        {% for var in str_vars %}
-          when "{{var.id}}"
-            JSON::Any.new {{var.id}}.not_nil!
+        {% for prop in props %}
+          when "{{prop[:name].id}}"
+          {% if prop[:type] == "String | Array(String) | Nil" %}
+            if {{prop[:name].id}}.is_a? Array
+              JSON::Any.new {{prop[:name].id}}.as(Array).map { |v| JSON::Any.new v }
+            else
+              JSON::Any.new {{prop[:name].id}}.as(String)
+            end
+          {% elsif prop[:type] == Time? %}
+            JSON::Any.new {{prop[:name].id}}.not_nil!.to_unix
+          {% elsif prop[:type] == String? %}
+            JSON::Any.new {{prop[:name].id}}.not_nil!
+          {% end %}
         {% end %}
         else
           json_unmapped[key]
@@ -97,26 +141,26 @@ module JWT
 
       def []?(key)
         case key
-        when "aud"
-          case aud
-          when Array
-            JSON::Any.new aud.as(Array).map { |v| JSON::Any.new v }
-          when String
-            JSON::Any.new aud.as(String)
-          else
-            nil
-          end
-        {% for var in time_vars %}
-          when "{{var.id}}"
-            unless {{var.id}}.nil?
-              JSON::Any.new {{var.id}}.not_nil!.to_unix
+        {% for prop in props %}
+          when "{{prop[:name].id}}"
+          {% if prop[:type] == "String | Array(String) | Nil" %}
+            case {{prop[:name].id}}
+            when Array
+              JSON::Any.new {{prop[:name].id}}.as(Array).map { |v| JSON::Any.new v }
+            when String
+              JSON::Any.new {{prop[:name].id}}.as(String)
+            else
+              nil
             end
-        {% end %}
-        {% for var in str_vars %}
-          when "{{var.id}}"
-            unless {{var.id}}.nil?
-              JSON::Any.new {{var.id}}
+          {% elsif prop[:type] == Time? %}
+            unless {{prop[:name].id}}.nil?
+              JSON::Any.new {{prop[:name].id}}.not_nil!.to_unix
             end
+          {% elsif prop[:type] == String? %}
+            unless {{prop[:name].id}}.nil?
+              JSON::Any.new {{prop[:name].id}}
+            end
+          {% end %}
         {% end %}
         else
           json_unmapped[key]?
