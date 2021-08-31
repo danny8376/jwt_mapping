@@ -67,7 +67,7 @@ module JWT
       {% end %}
 
       # dummy for support of JSON::Serializable::Unmapped
-			@[JSON::Field(ignore: true)]
+      @[JSON::Field(ignore: true)]
       property json_unmapped = Hash(String, JSON::Any).new
 
       def to_jwt(key : String, algorithm : JWT::Algorithm, **header_keys) : String
