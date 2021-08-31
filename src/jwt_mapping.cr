@@ -86,7 +86,6 @@ module JWT
 
       # dirty hack for compatibility with existing validation by emulating JSON::Any
 
-
       def [](key)
         case key
         {% for prop in props %}
@@ -191,7 +190,6 @@ module JWT
   rescue error : TypeCastError
     raise DecodeError.new("Invalid JWT payload", error)
   end
-
 
   private def decode_verify_data(verify_data, payload_class)
     encoded_header, encoded_payload = verify_data.split('.')
