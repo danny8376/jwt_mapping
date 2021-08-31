@@ -4,37 +4,6 @@ require "jwt"
 module JWT
   MAPPING_VERSION = "0.1.0"
 
-  module AudConverter
-    def self.from_json(pull : JSON::PullParser)
-      case pull.kind
-      when .string?
-        pull.read_string
-      when .begin_array?
-        ary = [] of String
-        pull.read_array do
-          ary << pull.read_string
-        end
-        ary
-      else
-        raise DecodeError.new("Invalid claim aud")
-      end
-    end
-    def self.to_json(values : Array(String) | String | Nil, builder : JSON::Builder)
-      case values
-      in Array(String)
-        builder.array do
-          values.each do |v|
-            builder.string v
-          end
-        end
-      in String
-        builder.string values
-      in Nil
-        # do nothing
-      end
-    end
-  end
-
   module Token
     macro included
       include JSON::Serializable
